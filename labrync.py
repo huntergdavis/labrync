@@ -75,10 +75,10 @@ def main(stdscr):
         if key != -1:
             if key == ord('a') or key == curses.KEY_LEFT:
                 # Rotate 90 degrees left
-                fPlayerA -= math.pi / 2
+                fPlayerA += math.pi / 2
             elif key == ord('d') or key == curses.KEY_RIGHT:
                 # Rotate 90 degrees right
-                fPlayerA += math.pi / 2
+                fPlayerA -= math.pi / 2
             elif key == ord('w') or key == curses.KEY_UP:
                 # Move forward
                 nMoveX = int(round(math.sin(fPlayerA)))
