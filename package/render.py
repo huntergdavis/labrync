@@ -1,4 +1,4 @@
-# render_scene.py
+# render.py
 
 import math
 import curses
@@ -7,16 +7,16 @@ from package.util import get_direction_text, get_direction_icon
 from package.shading import init_colors, get_wall_shade
 
 def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapWidth, mMapHeight,
-                 mPlayerX, mPlayerY, mPlayerA, mFOV, mDepth, mElapsedTime, mMapData, stdscr):
+                 mPlayerX, mPlayerY, mPlayerA, mFOV, mDepth, mElapsedTime, mMapData, stdscr, message_box):
     # Initialize colors
     use_256_colors = init_colors()
 
     # Define color pair indices (ensure these are initialized in init_colors)
-    WALL_MAP_COLOR_PAIR = 4   # Walls on the map in green
-    FLOOR_MAP_COLOR_PAIR = 5  # Floor on the map in black/default
-    PLAYER_COLOR_PAIR = 8     # Bright yellow for the player icon
-    EXIT_COLOR_PAIR = 9       # Bright blue for the exit
-    DOT_COLOR_PAIR = 12       # White color for dots
+    WALL_MAP_COLOR_PAIR = 4    # Walls on the map in green
+    FLOOR_MAP_COLOR_PAIR = 5   # Floor on the map in black/default
+    PLAYER_COLOR_PAIR = 8      # Bright yellow for the player icon
+    EXIT_COLOR_PAIR = 9        # Bright blue for the exit
+    DOT_COLOR_PAIR = 12        # White color for dots
 
     # Render the scene
     for x in range(mRenderWidth):
@@ -162,14 +162,13 @@ def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapW
     # Remove the dot from the map data if the player is on a dot
     if mMapData[player_map_y][player_map_x] == '.':
         # Replace the dot with a space in mMapData
-        mMapData[player_map_y] = (
-            mMapData[player_map_y][:player_map_x] + ' ' + mMapData[player_map_y][player_map_x + 1:]
-        )
+        mMapData[player_map_y][player_map_x] = ' '  # Corrected line
 
     # Display the player icon
     if 0 <= map_screen_x < mScreenWidth and 0 <= map_screen_y < mScreenHeight:
         try:
-            stdscr.addch(map_screen_y, map_screen_x, get_direction_icon(mPlayerA), curses.color_pair(PLAYER_COLOR_PAIR))
+            stdscr.addch(map_screen_y, map_screen_x, get_direction_icon(mPlayerA),
+                         curses.color_pair(PLAYER_COLOR_PAIR))
         except curses.error:
             pass
 
@@ -192,3 +191,7 @@ def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapW
                 stdscr.addstr(screen_y, screen_x, stat)
             except curses.error:
                 pass
+
+    # After all rendering, update and render the message box
+    message_box.update()
+    message_box.render()

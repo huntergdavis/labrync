@@ -7,8 +7,8 @@ def get_maze():
     cell_size = 2  # Increase to make passages wider
 
     # Adjust the maze dimensions based on cell size
-    maze_width = width * (cell_size + 1) + 1
-    maze_height = height * (cell_size + 1) + 1
+    maze_width = width
+    maze_height = height
 
     # Initialize the maze grid with walls ('#')
     maze = [['#' for _ in range(maze_width)] for _ in range(maze_height)]
