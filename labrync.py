@@ -17,9 +17,6 @@ def main(stdscr):
     stdscr.clear()
     curses.curs_set(0)  # Hide cursor
 
-    # Parse command-line arguments
-    nAutoPlay, mShowFPS, mFogOfWar = parse_arguments(sys.argv)
-
     # Initialize game state
     game_state = initialize_game_state(get_maze, get_fog, mFogOfWar)
 
@@ -136,6 +133,8 @@ def parse_arguments(argv):
                 mFogOfWar = False
             elif arg == '-h':
                 print_help()
+                # flush buffers and exit
+                sys.stdout.flush()
                 sys.exit(0)
 
     return nAutoPlay, mShowFPS, mFogOfWar
@@ -154,6 +153,7 @@ def print_help():
         "   q : Quit the game (while playing)"
     )
     print(help_message)
+    sys.stdout.flush()
 
 def initialize_game_state(get_maze_func, get_fog_func, mFogOfWar):
     """
@@ -334,4 +334,6 @@ def process_key(key, game_state, message_box):
         move_player(game_state, 'backward', message_box)
 
 if __name__ == "__main__":
+    # Parse command-line arguments before initializing curses
+    nAutoPlay, mShowFPS, mFogOfWar = parse_arguments(sys.argv)
     curses.wrapper(main)
