@@ -1,14 +1,14 @@
-# This file contains the render_scene function that renders the scene and the map on the screen.
 import math
 import curses
 
 from package.util import get_direction_text, get_direction_icon
 
-def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapWidth, mMapHeight, mPlayerX, mPlayerY, mPlayerA, mFOV, mDepth, mElapsedTime, mMapData, stdscr):
+def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapWidth, mMapHeight,
+                 mPlayerX, mPlayerY, mPlayerA, mFOV, mDepth, mElapsedTime, mMapData, stdscr):
     # Render the scene
     for x in range(mRenderWidth):
-        # Calculate the ray angle
-        fRayAngle = mPlayerA - mFOV / 2.0 + (x / mRenderWidth) * mFOV
+        # Calculate the ray angle (fixed to correct horizontal mirroring)
+        fRayAngle = mPlayerA + mFOV / 2.0 - (x / mRenderWidth) * mFOV
 
         # Initial ray position and direction
         fDistanceToWall = 0.0
@@ -61,7 +61,7 @@ def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapW
                                 dot = (fEyeX * vx / d) + (fEyeY * vy / d)
                                 p.append((d, dot))
 
-                    # Sort Pairs based on distance
+                    # Sort pairs based on distance
                     p.sort(key=lambda x: x[0])
 
                     # Check if closest 2-3 hits are close to 90 degrees
@@ -80,85 +80,63 @@ def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapW
         nCeiling = int(mScreenHeight / 2 - mScreenHeight / fDistanceToWall)
         nFloor = mScreenHeight - nCeiling
 
-        # Calculate texture coordinate (wall hit coordinate)
-        fBlockMidX = nTestX + 0.5
-        fBlockMidY = nTestY + 0.5
+        # Use ASCII art to enhance wall appearance with vertical repetition
+        # Define wall patterns for different distances and vertical positions
+        wall_patterns = [
+            ('#', curses.color_pair(1)),   # Very close walls
+            ('%', curses.color_pair(2)),   # Close walls
+            ('*', curses.color_pair(3)),   # Medium walls
+            ('-', curses.color_pair(4)),   # Far walls
+            (' ', curses.color_pair(5)),   # Very far walls
+        ]
 
-        fTestAngle = math.atan2(fHitY - fBlockMidY, fHitX - fBlockMidX)
-
-        if -math.pi * 0.25 <= fTestAngle < math.pi * 0.25:
-            fSampleX = fHitY % 1
-        elif math.pi * 0.25 <= fTestAngle < math.pi * 0.75:
-            fSampleX = fHitX % 1
-        elif -math.pi * 0.75 <= fTestAngle < -math.pi * 0.25:
-            fSampleX = fHitX % 1
-        else:
-            fSampleX = fHitY % 1
-
-        # Define a wall texture pattern
-        sWallTexture = "█▓▒░"
-
-        nTextureIndex = int(fSampleX * len(sWallTexture))
-        nTextureIndex = min(nTextureIndex, len(sWallTexture) - 1)
-
-        nShade = sWallTexture[nTextureIndex]
-
-        # If boundary, use a special character
+        # Determine which pattern to use based on distance
         if bBoundary:
-            nShade = '|'
-
-        # Set color based on distance
-        if fDistanceToWall <= mDepth / 4.0:
-            color_pair = curses.color_pair(1)  # Very close
+            nShade, color_pair = ('|', curses.color_pair(7))  # Boundary color
+        elif fDistanceToWall <= mDepth / 4.0:
+            nShade_base, color_pair = wall_patterns[0]
         elif fDistanceToWall < mDepth / 3.0:
-            color_pair = curses.color_pair(2)  # Close
+            nShade_base, color_pair = wall_patterns[1]
         elif fDistanceToWall < mDepth / 2.0:
-            color_pair = curses.color_pair(3)  # Medium
+            nShade_base, color_pair = wall_patterns[2]
         elif fDistanceToWall < mDepth:
-            color_pair = curses.color_pair(4)  # Far
+            nShade_base, color_pair = wall_patterns[3]
         else:
-            color_pair = curses.color_pair(5)  # Very far
+            nShade_base, color_pair = wall_patterns[4]
 
+        # Create vertical repetition by alternating characters based on y-coordinate
         for y in range(mScreenHeight):
             if y < nCeiling:
                 # Sky
                 ch = ' '
                 stdscr.addch(y, x, ch, curses.color_pair(9))
             elif y >= nCeiling and y < nFloor:
-                # Wall
-                ch = nShade
-                stdscr.addch(y, x, ch, color_pair)
-            else:
-                # Floor shading
-                b = 1.0 - ((y - mScreenHeight / 2) / (mScreenHeight / 2))
-                if b < 0:
-                    b = 0
-                if b > 1:
-                    b = 1
-
-                # Use different floor characters to simulate texture
-                if b < 0.25:
-                    floor_char = '#'
-                    floor_color = curses.color_pair(6)
-                elif b < 0.5:
-                    floor_char = 'x'
-                    floor_color = curses.color_pair(2)
-                elif b < 0.75:
-                    floor_char = '.'
-                    floor_color = curses.color_pair(3)
-                elif b < 0.9:
-                    floor_char = '-'
-                    floor_color = curses.color_pair(4)
+                # Wall with vertical patterning
+                # Alternate characters every few lines to create vertical repetition
+                pattern_index = (y - nCeiling) % 4
+                if pattern_index == 0:
+                    nShade = nShade_base
+                elif pattern_index == 1:
+                    nShade = '|'
+                elif pattern_index == 2:
+                    nShade = nShade_base
                 else:
-                    floor_char = ' '
-                    floor_color = curses.color_pair(5)
+                    nShade = '|'
+                stdscr.addch(y, x, nShade, color_pair)
+            elif y == nFloor:
+                # Floor boundary (outline)
+                stdscr.addch(y, x, '_', curses.color_pair(6))
+            else:
+                # Floor
+                floor_char = '.'
+                floor_color = curses.color_pair(8)
                 stdscr.addch(y, x, floor_char, floor_color)
 
     # Draw separator between the rendering area and the map
     separator_x = mRenderWidth
     for y in range(mScreenHeight):
         try:
-            stdscr.addch(y, separator_x, '|')
+            stdscr.addch(y, separator_x, '|', curses.color_pair(7))
         except curses.error:
             pass
 
@@ -180,7 +158,7 @@ def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapW
     player_map_x = int(mPlayerX) + map_offset_x
     player_map_y = int(mPlayerY)
     if 0 <= player_map_x < mScreenWidth and 0 <= player_map_y < mScreenHeight:
-        try:  
+        try:
             stdscr.addch(player_map_y, player_map_x, get_direction_icon(mPlayerA), curses.color_pair(2))
         except curses.error:
             pass
@@ -204,4 +182,3 @@ def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapW
                 stdscr.addstr(screen_y, screen_x, stat)
             except curses.error:
                 pass
-
