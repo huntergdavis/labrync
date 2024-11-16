@@ -2,11 +2,15 @@ import time
 import math
 import curses
 
+from package.maze import get_maze
+from package.util import get_direction_text
+from package.util import get_direction_icon
+
 def main(stdscr):
     nScreenWidth = 80  # Console Screen Size X (columns)
     nScreenHeight = 24  # Console Screen Size Y (rows)
     nMapWidth = 16  # Map Dimensions
-    nMapHeight = 16
+    nMapHeight = 18
 
     fPlayerX = 14.5  # Adjusted Player Start Position X
     fPlayerY = 5.5   # Adjusted Player Start Position Y
@@ -16,24 +20,7 @@ def main(stdscr):
     fSpeed = 5.0     # Walking Speed
 
     # Create Map
-    map_data = [
-        '#########.......',
-        '#...............',
-        '#.......########',
-        '#..............#',
-        '#......##......#',
-        '#......##......#',
-        '#..............#',
-        '###............#',
-        '##.............#',
-        '#......####..###',
-        '#......#.......#',
-        '#......#.......#',
-        '#..............#',
-        '#......#########',
-        '#..............#',
-        '################'
-    ]
+    map_data = get_maze()
 
     # Initialize curses
     curses.curs_set(0)
@@ -222,8 +209,8 @@ def main(stdscr):
         player_map_x = int(fPlayerX) + map_offset_x
         player_map_y = int(fPlayerY)
         if 0 <= player_map_x < nScreenWidth and 0 <= player_map_y < nScreenHeight:
-            try:
-                stdscr.addch(player_map_y, player_map_x, 'P', curses.color_pair(5))
+            try:  
+                stdscr.addch(player_map_y, player_map_x, get_direction_icon(fPlayerA), curses.color_pair(2))
             except curses.error:
                 pass
 
@@ -231,21 +218,9 @@ def main(stdscr):
         stats_start_y = nMapHeight + 1  # Start below the map
         fps = 1.0 / fElapsedTime if fElapsedTime != 0 else 0.0  # Prevent division by zero
 
-        # Corrected get_direction function
-        def get_direction(angle):
-            angle = angle % (2 * math.pi)
-            if math.isclose(angle, 0, abs_tol=1e-2) or math.isclose(angle, 2 * math.pi, abs_tol=1e-2):
-                return 'South'
-            elif math.isclose(angle, math.pi / 2, abs_tol=1e-2):
-                return 'East'
-            elif math.isclose(angle, math.pi, abs_tol=1e-2):
-                return 'North'
-            elif math.isclose(angle, 3 * math.pi / 2, abs_tol=1e-2):
-                return 'West'
-            else:
-                return f'{angle:.2f} rad'
 
-        dir_text = get_direction(fPlayerA)
+
+        dir_text = get_direction_text(fPlayerA)
         stats = [
             f"X={fPlayerX:.2f}",
             f"Y={fPlayerY:.2f}",
