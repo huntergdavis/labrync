@@ -4,8 +4,6 @@ import curses
 import time
 import math
 
-import random
-
 class MessageBox:
     def __init__(self, stdscr):
         self.stdscr = stdscr
@@ -13,6 +11,7 @@ class MessageBox:
         self.message = ""
         self.duration = 0
         self.start_time = 0
+        self.jostle_angle = 0.0  # Initialize jostle_angle for smooth movement
 
     def show(self, message, duration=1.0):
         self.message = message
@@ -31,9 +30,13 @@ class MessageBox:
             # Get screen size
             max_y, max_x = self.stdscr.getmaxyx()
             
-            # Create a window for the message box
-            width = len(self.message) + 4
-            height = 5
+            # Define message box dimensions
+            width = len(self.message) + 4  # Padding of 2 on each side
+            height = 5  # Fixed height
+            
+            # Define fixed text position (center of the screen)
+            fixed_y = max_y // 2
+            fixed_x = max_x // 2
             
             # Initialize jostle_angle if not already present
             if not hasattr(self, 'jostle_angle'):
@@ -43,16 +46,17 @@ class MessageBox:
             self.jostle_angle += 0.05  # Adjust this value for speed of jostling
             
             # Calculate jostle offsets using sine and cosine for smooth, circular movement
-            jostle_x = int(math.sin(self.jostle_angle) * 2)  # Horizontal offset
-            jostle_y = int(math.cos(self.jostle_angle) * 2)  # Vertical offset
+            jostle_radius = 2  # Maximum offset in any direction
+            jostle_x = int(math.sin(self.jostle_angle) * jostle_radius)
+            jostle_y = int(math.cos(self.jostle_angle) * jostle_radius)
             
             # Calculate window start positions with jostle offsets
-            start_x = (max_x - width) // 2 + jostle_x
-            start_y = (max_y - height) // 2 + jostle_y
+            start_y = fixed_y - (height // 2) + jostle_y
+            start_x = fixed_x - (width // 2) + jostle_x
             
             # Ensure the window stays within the screen boundaries
-            start_x = max(0, min(start_x, max_x - width))
             start_y = max(0, min(start_y, max_y - height))
+            start_x = max(0, min(start_x, max_x - width))
             
             # Create a new window with the calculated positions
             win = curses.newwin(height, width, start_y, start_x)
@@ -75,4 +79,3 @@ class MessageBox:
             
             # Refresh the window to display changes
             win.refresh()
-
