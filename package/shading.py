@@ -13,7 +13,7 @@ def init_colors():
 
     # Use standard colors
     standard_colors = [
-        curses.COLOR_BLACK,
+        curses.COLOR_RED,
         curses.COLOR_RED,
         curses.COLOR_GREEN,
         curses.COLOR_YELLOW,

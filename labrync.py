@@ -21,7 +21,7 @@ def main(stdscr):
     nAutoPlay, mShowFPS, mFogOfWar = parse_arguments(sys.argv)
 
     # Initialize game state
-    game_state = initialize_game_state(get_maze, get_fog)
+    game_state = initialize_game_state(get_maze, get_fog, mFogOfWar)
 
     # update fog of war around player's position
     update_fog(game_state, int(game_state['mPlayerX']), int(game_state['mPlayerY']))
@@ -155,7 +155,7 @@ def print_help():
     )
     print(help_message)
 
-def initialize_game_state(get_maze_func, get_fog_func):
+def initialize_game_state(get_maze_func, get_fog_func, mFogOfWar):
     """
     Initializes and returns the game state dictionary.
 
@@ -167,7 +167,7 @@ def initialize_game_state(get_maze_func, get_fog_func):
         dict: Game state variables.
     """
     mMapData = get_maze_func()
-    mFogData = get_fog_func()
+    mFogData = get_fog_func(not mFogOfWar)
     mMapWidth = len(mMapData[0])
     mMapHeight = len(mMapData)
 
