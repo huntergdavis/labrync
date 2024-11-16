@@ -23,6 +23,9 @@ def main(stdscr):
     # Initialize game state
     game_state = initialize_game_state(get_maze, get_fog)
 
+    # update fog of war around player's position
+    update_fog(game_state, int(game_state['mPlayerX']), int(game_state['mPlayerY']))
+
     # Instantiate the message box
     message_box = MessageBox(stdscr)
 
@@ -148,6 +151,7 @@ def print_help():
         "  -f : Show FPS\n"
         "  -w : Disable fog of war\n"
         "  -h : Display this help message"
+        "   q : Quit the game (while playing)"
     )
     print(help_message)
 
@@ -231,6 +235,9 @@ def reset_game(game_state, get_maze_func, get_fog_func):
     for row in game_state['mFogData']:
         if not isinstance(row, list) or len(row) != game_state['map_width']:
             raise ValueError("Each row in mFogData must be a list with length equal to map_width.")
+        
+    # update fog of war around player's position
+    update_fog(game_state, int(game_state['mPlayerX']), int(game_state['mPlayerY']))
 
 def rotate_left(game_state):
     """
@@ -301,8 +308,8 @@ def update_fog(game_state, x, y):
         x (int): Player's X position.
         y (int): Player's Y position.
     """
-    for i in range(-1, 2):
-        for j in range(-1, 2):
+    for i in range(-2, 3):
+        for j in range(-2, 3):
             nx = x + i
             ny = y + j
             if 0 <= nx < game_state['map_width'] and 0 <= ny < game_state['map_height']:
