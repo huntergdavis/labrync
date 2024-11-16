@@ -104,7 +104,7 @@ def main(stdscr):
                 # Level is complete and message box is inactive
                 # Regenerate the map and restart the level
                 game_state['mPlayerLevel'] += 1
-                reset_game(game_state, get_maze, get_fog)
+                reset_game(game_state, get_maze, get_fog, mFogOfWar)
 
         # Refresh the screen
         stdscr.refresh()
@@ -167,7 +167,7 @@ def initialize_game_state(get_maze_func, get_fog_func, mFogOfWar):
         dict: Game state variables.
     """
     mMapData = get_maze_func()
-    mFogData = get_fog_func(not mFogOfWar)
+    mFogData = get_fog_func(mFogOfWar)
     mMapWidth = len(mMapData[0])
     mMapHeight = len(mMapData)
 
@@ -204,7 +204,7 @@ def initialize_game_state(get_maze_func, get_fog_func, mFogOfWar):
         'level_complete': False
     }
 
-def reset_game(game_state, get_maze_func, get_fog_func):
+def reset_game(game_state, get_maze_func, get_fog_func, mFogOfWar):
     """
     Resets the game state for a new level.
 
@@ -217,7 +217,7 @@ def reset_game(game_state, get_maze_func, get_fog_func):
     game_state['mPlayerY'] = 1.5
     game_state['mPlayerA'] = 0.0
     game_state['mMapData'] = get_maze_func()
-    game_state['mFogData'] = get_fog_func()
+    game_state['mFogData'] = get_fog_func(mFogOfWar)
     game_state['map_width'] = len(game_state['mMapData'][0])
     game_state['map_height'] = len(game_state['mMapData'])
     game_state['game_ticker'] = 0
