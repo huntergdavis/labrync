@@ -1,10 +1,23 @@
+# render_scene.py
+
 import math
 import curses
 
 from package.util import get_direction_text, get_direction_icon
+from package.shading import init_colors, get_wall_shade
 
 def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapWidth, mMapHeight,
                  mPlayerX, mPlayerY, mPlayerA, mFOV, mDepth, mElapsedTime, mMapData, stdscr):
+    # Initialize colors
+    use_256_colors = init_colors()
+
+    # Define color pair indices (ensure these are initialized in init_colors)
+    WALL_MAP_COLOR_PAIR = 4   # Walls on the map in green
+    FLOOR_MAP_COLOR_PAIR = 5  # Floor on the map in black/default
+    PLAYER_COLOR_PAIR = 8     # Bright yellow for the player icon
+    EXIT_COLOR_PAIR = 9       # Bright blue for the exit
+    DOT_COLOR_PAIR = 12       # White color for dots
+
     # Render the scene
     for x in range(mRenderWidth):
         # Calculate the ray angle (fixed to correct horizontal mirroring)
@@ -80,36 +93,15 @@ def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapW
         nCeiling = int(mScreenHeight / 2 - mScreenHeight / fDistanceToWall)
         nFloor = mScreenHeight - nCeiling
 
-        # Use ASCII art to enhance wall appearance with vertical repetition
-        # Define wall patterns for different distances and vertical positions
-        wall_patterns = [
-            ('#', curses.color_pair(1)),   # Very close walls
-            ('%', curses.color_pair(2)),   # Close walls
-            ('*', curses.color_pair(3)),   # Medium walls
-            ('-', curses.color_pair(4)),   # Far walls
-            (' ', curses.color_pair(5)),   # Very far walls
-        ]
-
-        # Determine which pattern to use based on distance
-        if bBoundary:
-            nShade, color_pair = ('|', curses.color_pair(7))  # Boundary color
-        elif fDistanceToWall <= mDepth / 4.0:
-            nShade_base, color_pair = wall_patterns[0]
-        elif fDistanceToWall < mDepth / 3.0:
-            nShade_base, color_pair = wall_patterns[1]
-        elif fDistanceToWall < mDepth / 2.0:
-            nShade_base, color_pair = wall_patterns[2]
-        elif fDistanceToWall < mDepth:
-            nShade_base, color_pair = wall_patterns[3]
-        else:
-            nShade_base, color_pair = wall_patterns[4]
+        # Get wall shade and color using the function from shading.py
+        nShade_base, color_pair = get_wall_shade(fDistanceToWall, bBoundary, mDepth, use_256_colors)
 
         # Create vertical repetition by alternating characters based on y-coordinate
         for y in range(mScreenHeight):
             if y < nCeiling:
                 # Sky
                 ch = ' '
-                stdscr.addch(y, x, ch, curses.color_pair(9))
+                stdscr.addch(y, x, ch)
             elif y >= nCeiling and y < nFloor:
                 # Wall with vertical patterning
                 # Alternate characters every few lines to create vertical repetition
@@ -148,18 +140,36 @@ def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapW
             screen_x = nx + map_offset_x
             screen_y = ny
             if 0 <= screen_x < mScreenWidth and 0 <= screen_y < mScreenHeight:
-                color = curses.color_pair(4) if ch == '#' else curses.color_pair(0)
+                if ch == '#':
+                    color = curses.color_pair(WALL_MAP_COLOR_PAIR)
+                elif ch == 'X':
+                    color = curses.color_pair(EXIT_COLOR_PAIR)
+                elif ch == '.':
+                    color = curses.color_pair(DOT_COLOR_PAIR)
+                else:
+                    color = curses.color_pair(FLOOR_MAP_COLOR_PAIR)
                 try:
                     stdscr.addch(screen_y, screen_x, ch, color)
                 except curses.error:
                     pass
 
-    # Display the player on the map
-    player_map_x = int(mPlayerX) + map_offset_x
+    # Display the player on the map and remove the dot if present
+    player_map_x = int(mPlayerX)
     player_map_y = int(mPlayerY)
-    if 0 <= player_map_x < mScreenWidth and 0 <= player_map_y < mScreenHeight:
+    map_screen_x = player_map_x + map_offset_x
+    map_screen_y = player_map_y
+
+    # Remove the dot from the map data if the player is on a dot
+    if mMapData[player_map_y][player_map_x] == '.':
+        # Replace the dot with a space in mMapData
+        mMapData[player_map_y] = (
+            mMapData[player_map_y][:player_map_x] + ' ' + mMapData[player_map_y][player_map_x + 1:]
+        )
+
+    # Display the player icon
+    if 0 <= map_screen_x < mScreenWidth and 0 <= map_screen_y < mScreenHeight:
         try:
-            stdscr.addch(player_map_y, player_map_x, get_direction_icon(mPlayerA), curses.color_pair(2))
+            stdscr.addch(map_screen_y, map_screen_x, get_direction_icon(mPlayerA), curses.color_pair(PLAYER_COLOR_PAIR))
         except curses.error:
             pass
 

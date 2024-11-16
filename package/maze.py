@@ -1,9 +1,8 @@
-
-
+# maze.py
 
 def get_maze():
-    return [
-        '#########.......',
+    maze = [
+        '#########......X',
         '#...............',
         '#.......########',
         '#..............#',
@@ -22,3 +21,6 @@ def get_maze():
         '#..............#',
         '################'
     ]
+    # Replace spaces with dots to fill the maze with dots
+    maze = [row.replace(' ', '.') for row in maze]
+    return maze
