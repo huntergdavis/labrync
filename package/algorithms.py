@@ -1,8 +1,8 @@
 # algorithms.py
 
 import math
-import heapq
 import random
+from collections import deque
 
 def get_next_move(mMapData, mPlayerX, mPlayerY, mPlayerA):
     """
@@ -17,20 +17,19 @@ def get_next_move(mMapData, mPlayerX, mPlayerY, mPlayerA):
     Returns:
         int or None: The next keypress to execute (ord('w'), ord('a'), ord('d')) or None if no move is possible.
     """
-    # Initialize path and index if not present
+    # Initialize AI state within function attributes
     if not hasattr(get_next_move, 'current_path'):
         get_next_move.current_path = []
         get_next_move.path_index = 0
 
-    # Initialize pending_rotations if not already present
     if not hasattr(get_next_move, 'pending_rotations'):
         get_next_move.pending_rotations = []
 
-    # If there are pending rotations, return the next one
+    # If there are pending rotations, execute them first
     if get_next_move.pending_rotations:
         return get_next_move.pending_rotations.pop(0)
 
-    # Helper function to find the exit position(s)
+    # Helper function to find all exit positions
     def find_exits(mMapData):
         exits = []
         for y, row in enumerate(mMapData):
@@ -39,10 +38,8 @@ def get_next_move(mMapData, mPlayerX, mPlayerY, mPlayerA):
                     exits.append((x, y))
         return exits
 
-    # Helper function for BFS
+    # Helper function to perform BFS and find the shortest path to the nearest exit
     def bfs(start, goals, mMapData):
-        from collections import deque
-
         queue = deque()
         queue.append(start)
         came_from = {start: None}
@@ -51,7 +48,7 @@ def get_next_move(mMapData, mPlayerX, mPlayerY, mPlayerA):
             current = queue.popleft()
 
             if current in goals:
-                # Reconstruct path
+                # Reconstruct the path from start to goal
                 path = []
                 while current != start:
                     path.append(current)
@@ -59,18 +56,26 @@ def get_next_move(mMapData, mPlayerX, mPlayerY, mPlayerA):
                 path.reverse()
                 return path  # From start to goal
 
-            neighbors = []
-            directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Left, Right, Up, Down
-            for dx, dy in directions:
-                neighbor = (current[0] + dx, current[1] + dy)
-                x, y = neighbor
-                if 0 <= y < len(mMapData) and 0 <= x < len(mMapData[0]):
-                    if mMapData[y][x] != '#' and neighbor not in came_from:
-                        neighbors.append(neighbor)
-                        came_from[neighbor] = current
-                        queue.append(neighbor)
+            neighbors = get_neighbors(current, mMapData)
+
+            for neighbor in neighbors:
+                if neighbor not in came_from:
+                    came_from[neighbor] = current
+                    queue.append(neighbor)
 
         return None  # No path found
+
+    # Helper function to get valid neighboring cells (no walls)
+    def get_neighbors(position, mMapData):
+        x, y = position
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Left, Right, Up, Down
+        neighbors = []
+        for dx, dy in directions:
+            nx, ny = x + dx, y + dy
+            if 0 <= ny < len(mMapData) and 0 <= nx < len(mMapData[0]):
+                if mMapData[ny][nx] != '#':
+                    neighbors.append((nx, ny))
+        return neighbors
 
     # Helper function to determine the current direction based on angle
     def get_current_direction(angle):
@@ -102,7 +107,7 @@ def get_next_move(mMapData, mPlayerX, mPlayerY, mPlayerA):
             return [ord('a')]  # Rotate left
         return []
 
-    # Helper function to get adjacent cell based on direction
+    # Helper function to get the adjacent cell based on direction
     def get_adjacent_cell(x, y, direction):
         if direction == 'up':
             return (int(x), int(y) - 1)

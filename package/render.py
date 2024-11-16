@@ -7,7 +7,7 @@ from package.util import get_direction_text, get_direction_icon
 from package.shading import init_colors, get_wall_shade
 
 def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapWidth, mMapHeight,
-                 mPlayerX, mPlayerY, mPlayerA, mFOV, mDepth, mElapsedTime, mMapData, mPlayerLevel,mShowFPS, stdscr):
+                 mPlayerX, mPlayerY, mPlayerA, mFOV, mDepth, mElapsedTime, mMapData, mPlayerLevel,mShowFPS,mFogData, stdscr):
     # Initialize colors
     use_256_colors = init_colors()
 
@@ -149,10 +149,14 @@ def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapW
     for ny in range(mMapHeight):
         for nx in range(mMapWidth):
             ch = mMapData[ny][nx]
+            fo = mFogData[ny][nx]
             screen_x = nx + map_offset_x
             screen_y = ny
             if 0 <= screen_x < mScreenWidth and 0 <= screen_y < mScreenHeight:
-                if ch == '#':
+                if fo == False:
+                    color = curses.color_pair(7)
+                    ch = ' '
+                elif ch == '#':
                     color = curses.color_pair(WALL_MAP_COLOR_PAIR)
                 elif ch == 'X':
                     color = curses.color_pair(EXIT_COLOR_PAIR)

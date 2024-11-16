@@ -98,5 +98,5 @@ def get_maze():
 # this will be used later for rendering the mini-map
 def get_fog():
     # Initialize the fog grid with False values
-    fog = [[False for _ in range(18)] for _ in range(16)]
+    fog = [[False for _ in range(16)] for _ in range(18)]
     return fog
