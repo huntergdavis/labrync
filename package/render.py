@@ -7,7 +7,7 @@ from package.util import get_direction_text, get_direction_icon
 from package.shading import init_colors, get_wall_shade
 
 def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapWidth, mMapHeight,
-                 mPlayerX, mPlayerY, mPlayerA, mFOV, mDepth, mElapsedTime, mMapData, stdscr, message_box):
+                 mPlayerX, mPlayerY, mPlayerA, mFOV, mDepth, mElapsedTime, mMapData, stdscr):
     # Initialize colors
     use_256_colors = init_colors()
 
@@ -101,7 +101,10 @@ def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapW
             if y < nCeiling:
                 # Sky
                 ch = ' '
-                stdscr.addch(y, x, ch)
+                try:
+                    stdscr.addch(y, x, ch)
+                except curses.error:
+                    pass
             elif y >= nCeiling and y < nFloor:
                 # Wall with vertical patterning
                 # Alternate characters every few lines to create vertical repetition
@@ -114,15 +117,24 @@ def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapW
                     nShade = nShade_base
                 else:
                     nShade = '|'
-                stdscr.addch(y, x, nShade, color_pair)
+                try:
+                    stdscr.addch(y, x, nShade, color_pair)
+                except curses.error:
+                    pass
             elif y == nFloor:
                 # Floor boundary (outline)
-                stdscr.addch(y, x, '_', curses.color_pair(6))
+                try:
+                    stdscr.addch(y, x, '_', curses.color_pair(6))
+                except curses.error:
+                    pass
             else:
                 # Floor
                 floor_char = '.'
                 floor_color = curses.color_pair(8)
-                stdscr.addch(y, x, floor_char, floor_color)
+                try:
+                    stdscr.addch(y, x, floor_char, floor_color)
+                except curses.error:
+                    pass
 
     # Draw separator between the rendering area and the map
     separator_x = mRenderWidth
@@ -161,7 +173,6 @@ def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapW
 
     # Remove the dot from the map data if the player is on a dot
     if mMapData[player_map_y][player_map_x] == '.':
-        # Replace the dot with a space in mMapData
         mMapData[player_map_y][player_map_x] = ' '  # Corrected line
 
     # Display the player icon
@@ -192,6 +203,3 @@ def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapW
             except curses.error:
                 pass
 
-    # After all rendering, update and render the message box
-    message_box.update()
-    message_box.render()

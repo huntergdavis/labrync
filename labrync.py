@@ -8,6 +8,7 @@ from package.render import render_scene
 from package.maze import get_maze
 from package.util import get_direction_text, get_direction_icon
 from package.message_box import MessageBox  # Import MessageBox
+from package.language import get_wall_message  # Import get_wall_message
 
 def main(stdscr):
     # Clear screen
@@ -56,45 +57,63 @@ def main(stdscr):
         mElapsedTime = current_time - last_time
         last_time = current_time
 
-        # Handle user input
-        key = stdscr.getch()
-        if key != -1:
-            if key == ord('a') or key == curses.KEY_LEFT:
-                # Rotate 90 degrees left
-                mPlayerA += math.pi / 2
-            elif key == ord('d') or key == curses.KEY_RIGHT:
-                # Rotate 90 degrees right
-                mPlayerA -= math.pi / 2
-            elif key == ord('w') or key == curses.KEY_UP:
-                # Move forward
-                nMoveX = int(round(math.sin(mPlayerA)))
-                nMoveY = int(round(math.cos(mPlayerA)))
-                nTestX = int(mPlayerX + nMoveX)
-                nTestY = int(mPlayerY + nMoveY)
-                if 0 <= nTestX < nMapWidth and 0 <= nTestY < nMapHeight:
-                    if mMapData[nTestY][nTestX] != '#':
-                        mPlayerX += nMoveX
-                        mPlayerY += nMoveY
-            elif key == ord('s') or key == curses.KEY_DOWN:
-                # Move backward
-                nMoveX = int(round(-math.sin(mPlayerA)))
-                nMoveY = int(round(-math.cos(mPlayerA)))
-                nTestX = int(mPlayerX + nMoveX)
-                nTestY = int(mPlayerY + nMoveY)
-                if 0 <= nTestX < nMapWidth and 0 <= nTestY < nMapHeight:
-                    if mMapData[nTestY][nTestX] != '#':
-                        mPlayerX += nMoveX
-                        mPlayerY += nMoveY
-            elif key == ord('q'):
+        # Update the message box first
+        message_box.update()
+
+        # If message box is not active, handle user input and game state
+        if not message_box.active:
+            # Handle user input
+            key = stdscr.getch()
+            if key != -1:
+                if key == ord('a') or key == curses.KEY_LEFT:
+                    # Rotate 90 degrees left
+                    mPlayerA += math.pi / 2
+                elif key == ord('d') or key == curses.KEY_RIGHT:
+                    # Rotate 90 degrees right
+                    mPlayerA -= math.pi / 2
+                elif key == ord('w') or key == curses.KEY_UP:
+                    # Move forward
+                    nMoveX = int(round(math.sin(mPlayerA)))
+                    nMoveY = int(round(math.cos(mPlayerA)))
+                    nTestX = int(mPlayerX + nMoveX)
+                    nTestY = int(mPlayerY + nMoveY)
+                    if 0 <= nTestX < nMapWidth and 0 <= nTestY < nMapHeight:
+                        if mMapData[nTestY][nTestX] != '#':
+                            mPlayerX += nMoveX
+                            mPlayerY += nMoveY
+                        else: 
+                            # Show a message box
+                            message_box.show(get_wall_message(), 1.0)
+                elif key == ord('s') or key == curses.KEY_DOWN:
+                    # Move backward
+                    nMoveX = int(round(-math.sin(mPlayerA)))
+                    nMoveY = int(round(-math.cos(mPlayerA)))
+                    nTestX = int(mPlayerX + nMoveX)
+                    nTestY = int(mPlayerY + nMoveY)
+                    if 0 <= nTestX < nMapWidth and 0 <= nTestY < nMapHeight:
+                        if mMapData[nTestY][nTestX] != '#':
+                            mPlayerX += nMoveX
+                            mPlayerY += nMoveY
+                        else:
+                            # Show a message box
+                            message_box.show("Ouch!", 1.0)
+                elif key == ord('q'):
+                    break  # Exit the loop
+
+                # Normalize the player's angle
+                mPlayerA = mPlayerA % (2 * math.pi)
+        else:
+            # When message box is active, allow quitting the game
+            key = stdscr.getch()
+            if key == ord('q'):
                 break  # Exit the loop
 
-            # Normalize the player's angle
-            mPlayerA = mPlayerA % (2 * math.pi)
-
-
-        # Render the scene
-        render_scene(nRenderWidth, nRenderHeight, nScreenWidth, nScreenHeight, nMapWidth, nMapHeight,
-                     mPlayerX, mPlayerY, mPlayerA, mFOV, mDepth, mElapsedTime, mMapData, stdscr, message_box)
+        if(message_box.active):
+            message_box.render()
+        else:
+            # Render the scene
+            render_scene(nRenderWidth, nRenderHeight, nScreenWidth, nScreenHeight, nMapWidth, nMapHeight,
+                    mPlayerX, mPlayerY, mPlayerA, mFOV, mDepth, mElapsedTime, mMapData, stdscr)
 
         # Refresh the screen
         stdscr.refresh()
