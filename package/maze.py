@@ -91,3 +91,12 @@ def get_maze():
     maze_strings = [''.join(row) for row in maze]
 
     return maze_strings
+
+
+# generate a 18x16 fog of war true/false map
+# False means the player has not visited the cell
+# this will be used later for rendering the mini-map
+def get_fog():
+    # Initialize the fog grid with False values
+    fog = [[False for _ in range(18)] for _ in range(16)]
+    return fog

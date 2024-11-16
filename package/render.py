@@ -7,7 +7,7 @@ from package.util import get_direction_text, get_direction_icon
 from package.shading import init_colors, get_wall_shade
 
 def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapWidth, mMapHeight,
-                 mPlayerX, mPlayerY, mPlayerA, mFOV, mDepth, mElapsedTime, mMapData, mPlayerLevel, stdscr):
+                 mPlayerX, mPlayerY, mPlayerA, mFOV, mDepth, mElapsedTime, mMapData, mPlayerLevel,mShowFPS, stdscr):
     # Initialize colors
     use_256_colors = init_colors()
 
@@ -188,12 +188,19 @@ def render_scene(mRenderWidth, mRenderHeight, mScreenWidth, mScreenHeight, mMapW
     fps = 1.0 / mElapsedTime if mElapsedTime != 0 else 0.0  # Prevent division by zero
 
     dir_text = get_direction_text(mPlayerA)
-    stats = [
-        f"X={mPlayerX:.2f},Y={mPlayerY:.2f}",
-        f"Dir={dir_text}",
-        f"FPS={fps:.2f}",
-        f"Level={mPlayerLevel}"
-    ]
+    if mShowFPS:
+        stats = [
+            f"X={mPlayerX:.2f},Y={mPlayerY:.2f}",
+            f"Dir={dir_text}",
+            f"FPS={fps:.2f}",
+            f"Level={mPlayerLevel}"
+        ]
+    else:
+        stats = [
+            f"X={mPlayerX:.2f},Y={mPlayerY:.2f}",
+            f"Dir={dir_text}",
+            f"Level={mPlayerLevel}"
+        ]
     for i, stat in enumerate(stats):
         screen_y = stats_start_y + i
         screen_x = mRenderWidth + 1

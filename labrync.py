@@ -8,7 +8,7 @@ import sys
 
 from package.render import render_scene
 from package.maze import get_maze
-from package.util import get_direction_text, get_direction_icon
+from package.maze import get_fog
 from package.message_box import MessageBox  # Import MessageBox
 from package.language import get_wall_message  # Import get_wall_message
 from package.algorithms import get_next_move  # Import get_next_move
@@ -21,9 +21,34 @@ def main(stdscr):
     # disable autoplay unless passed on the command line
     nAutoPlay = False
 
+    # show fps?
+    mShowFPS = False
+
+    # fog of war?
+    mFogOfWar = True
+
     # check if -a was passed on command line
-    if len(sys.argv) > 1 and sys.argv[1] == '-a':
-        nAutoPlay = True
+    # loop through as other arguments may be passed
+
+    if len(sys.argv) > 1:
+        for i in range(1, len(sys.argv)):
+            if sys.argv[i] == '-a':
+                nAutoPlay = True
+                break
+            if sys.argv[i] == '-f': # show fps
+                nShowFPS = True
+            if sys.argv[i] == '-w': # fog of war toggle
+                mFogOfWar = False
+                
+            if sys.argv[i] == '-h':
+                print("Usage: python labrync.py [-a]")
+                print("  -a: Auto-play the game")
+                print("  -f: Show FPS")
+                print("  -w: Disable fog of war")
+                print("  -h: Display this help message")
+                exit(0)
+    
+    
 
 
     # Initialize variables
@@ -50,6 +75,7 @@ def main(stdscr):
 
     # Load the map
     mMapData = get_maze()
+    mFogData = get_fog()
     mMapWidth = len(mMapData[0])
     mMapHeight = len(mMapData)
 
@@ -78,8 +104,9 @@ def main(stdscr):
         mPlayerY = 1.5
         mPlayerA = 0.0
 
-        # Load a new map
+        # Load a new map and fog data
         mMapData = get_maze()
+        mFogData = get_fog()
         mMapWidth = len(mMapData[0])
         mMapHeight = len(mMapData)
 
@@ -117,6 +144,14 @@ def main(stdscr):
                     mPlayerX += nMoveX
                     mPlayerY += nMoveY
 
+                    # the player can see in a 3x3 grid around them
+                    # update the fog of war to show the player has visited these cells
+                    # check for out of bounds issues
+                    for i in range(-1, 2):
+                        for j in range(-1, 2):
+                            if nTestX + i >= 0 and nTestX + i < mMapWidth and nTestY + j >= 0 and nTestY + j < mMapHeight:
+                                mFogData[nTestY + j][nTestX + i] = True
+
                     # Check if player has reached the exit 'X'
                     if mMapData[nTestY][nTestX] == 'X':
                         # Show "Level Complete!" message box
@@ -135,6 +170,14 @@ def main(stdscr):
                 if mMapData[nTestY][nTestX] != '#':
                     mPlayerX += nMoveX
                     mPlayerY += nMoveY
+
+                    # the player can see in a 3x3 grid around them
+                    # update the fog of war to show the player has visited these cells
+                    # check for out of bounds issues
+                    for i in range(-1, 2):
+                        for j in range(-1, 2):
+                            if nTestX + i >= 0 and nTestX + i < mMapWidth and nTestY + j >= 0 and nTestY + j < mMapHeight:
+                                mFogData[nTestY + j][nTestX + i] = True
 
                     # Check if player has reached the exit 'X'
                     if mMapData[nTestY][nTestX] == 'X':
@@ -182,7 +225,7 @@ def main(stdscr):
             if not level_complete:
                 # Render the scene only if the level is not complete
                 render_scene(nRenderWidth, nRenderHeight, nScreenWidth, nScreenHeight, nMapWidth, nMapHeight,
-                            mPlayerX, mPlayerY, mPlayerA, mFOV, mDepth, mElapsedTime, mMapData, mPlayerLevel, stdscr)
+                            mPlayerX, mPlayerY, mPlayerA, mFOV, mDepth, mElapsedTime, mMapData, mPlayerLevel, mShowFPS,stdscr)
             else:
                 # Level is complete and message box is inactive
                 # Regenerate the map and restart the level
