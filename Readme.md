@@ -7,6 +7,12 @@ onelonecoder
 https://github.com/OneLoneCoder/CommandLineFPS
 
 
+
+https://github.com/user-attachments/assets/20f62a61-c4c3-4d0b-982f-cf2f34eb647a
+
+
+
+
 1. Maps are randomly generated
 2. Maps can be auto-solved (screensaver mode, if you will) by passing -a to labrync.py
 3. Colors are supported 
