@@ -15,8 +15,15 @@ https://github.com/OneLoneCoder/CommandLineFPS
 6. Fog of War (or not) for additional challenge  
 
 Usage: python labrync.py [options]
+
 Options:
+
+
   -a : Auto-play the game
+
   -f : Show FPS
+
   -w : Disable fog of war
+
   -h : Display this help message   q : Quit the game (while playing)
+
