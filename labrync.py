@@ -106,8 +106,8 @@ def main(stdscr):
         # Refresh the screen
         stdscr.refresh()
 
-        # Control frame rate (100 FPS)
-        time.sleep(0.01)
+        # Control frame rate (10 FPS)
+        time.sleep(0.1)
 
 def parse_arguments(argv):
     """
